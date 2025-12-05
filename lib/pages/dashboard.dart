@@ -173,7 +173,7 @@ class _DashboardPageState extends State<DashboardPage> {
       case 'orders':
         route = '/orders';
         break;
-      case 'quotations':
+      case 'Quotations':
         route = '/quotations';
         break;
     }

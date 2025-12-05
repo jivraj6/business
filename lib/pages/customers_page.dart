@@ -122,63 +122,70 @@ class _CustomersPageState extends State<CustomersPage> {
     Customer customer,
     CustomerProvider provider,
   ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: customer.imageUrl != null && customer.imageUrl!.isNotEmpty
-            ? ClipOval(
-                child: Image.network(
-                  customer.imageUrl!,
-                  width: 56,
-                  height: 56,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return CircleAvatar(
-                      backgroundColor: Colors.blue.shade100,
-                      child: Text(
-                        customer.name.isNotEmpty
-                            ? customer.name[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    );
-                  },
+    return InkWell(
+      onTap: () {
+        debugPrint('Tapped customer: \\${customer.name} id=\\${customer.id}');
+        context.pushNamed('customer_details', extra: customer);
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: ListTile(
+          leading: customer.imageUrl != null && customer.imageUrl!.isNotEmpty
+              ? ClipOval(
+                  child: Image.network(
+                    customer.imageUrl!,
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return CircleAvatar(
+                        backgroundColor: Colors.blue.shade100,
+                        child: Text(
+                          customer.name.isNotEmpty
+                              ? customer.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      );
+                    },
+                  ),
+                )
+              : CircleAvatar(
+                  backgroundColor: Colors.blue.shade100,
+                  child: Text(
+                    customer.name.isNotEmpty
+                        ? customer.name[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
-              )
-            : CircleAvatar(
-                backgroundColor: Colors.blue.shade100,
-                child: Text(
-                  customer.name.isNotEmpty
-                      ? customer.name[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+          title: Text(
+            customer.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text('Balance: ${customer.balance}'),
+              Text('Address: ${customer.address}'),
+              //if (customer.gst.isNotEmpty) Text('GST: ${customer.gst}'),
+            ],
+          ),
+          isThreeLine: true,
+          trailing: PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: const Text('Edit'),
+                onTap: () => _showEditCustomerDialog(context, customer),
               ),
-        title: Text(
-          customer.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text('Balance: ${customer.balance}'),
-            Text('Address: ${customer.address}'),
-            //if (customer.gst.isNotEmpty) Text('GST: ${customer.gst}'),
-          ],
-        ),
-        isThreeLine: true,
-        trailing: PopupMenuButton(
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              child: const Text('Edit'),
-              onTap: () => _showEditCustomerDialog(context, customer),
-            ),
-            PopupMenuItem(
-              child: const Text('Delete'),
-              onTap: () => _showDeleteConfirmation(context, customer, provider),
-            ),
-          ],
+              PopupMenuItem(
+                child: const Text('Delete'),
+                onTap: () =>
+                    _showDeleteConfirmation(context, customer, provider),
+              ),
+            ],
+          ),
         ),
       ),
     );

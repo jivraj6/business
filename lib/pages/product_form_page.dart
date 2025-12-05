@@ -22,6 +22,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   late TextEditingController nameCtrl;
   late TextEditingController priceCtrl;
   late TextEditingController descCtrl;
+  late TextEditingController youtubeCtrl;
   String? selectedCategoryId;
   List<PlatformFile> picked = [];
 
@@ -31,6 +32,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
     nameCtrl = TextEditingController(text: widget.product?.name ?? '');
     priceCtrl = TextEditingController(text: widget.product?.price ?? '');
     descCtrl = TextEditingController(text: widget.product?.description ?? '');
+    youtubeCtrl = TextEditingController(text: widget.product?.youtubeUrl ?? '');
     Future.microtask(() => context.read<CategoryProvider>().fetchCategories());
   }
 
@@ -39,6 +41,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
     nameCtrl.dispose();
     priceCtrl.dispose();
     descCtrl.dispose();
+    youtubeCtrl.dispose();
     super.dispose();
   }
 
@@ -78,7 +81,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                             items: [
                               ...catProv.categories.map(
                                 (c) => DropdownMenuItem(
-                                  value: c.id?.toString(),
+                                  value: c.name?.toString(),
                                   child: Text(c.name),
                                 ),
                               ),
@@ -106,6 +109,13 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 controller: descCtrl,
                 decoration: const InputDecoration(labelText: 'Description'),
                 maxLines: 4,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: youtubeCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'YouTube Video Link (optional)',
+                ),
               ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
@@ -187,6 +197,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         price: price,
                         description: descCtrl.text.trim(),
                         images: widget.product?.images ?? [],
+                        youtubeUrl: youtubeCtrl.text.trim(),
                       );
                       final ok = await prodProv.addProduct(prod, picked);
                       if (ok) Navigator.pop(context);

@@ -7,6 +7,7 @@ class Product {
   final String price;
   final String description;
   final List<String> images;
+  final String? youtubeUrl;
 
   Product({
     this.id,
@@ -15,6 +16,7 @@ class Product {
     required this.price,
     required this.description,
     required this.images,
+    this.youtubeUrl,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,7 @@ class Product {
       price: json['price']?.toString() ?? '',
       description: json['description'] ?? '',
       images: imgs,
+      youtubeUrl: json['youtube_url'] ?? json['youtubeUrl'],
     );
   }
 
@@ -51,5 +54,7 @@ class Product {
     'category': category,
     'price': price,
     'description': description,
+    if (youtubeUrl != null && youtubeUrl!.isNotEmpty)
+      'youtube_url': youtubeUrl!,
   };
 }
