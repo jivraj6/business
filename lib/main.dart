@@ -1,3 +1,4 @@
+import 'package:buisness/providers/staff_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CustomerProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => StaffProvider()),
       ],
       child: MaterialApp.router(
         title: 'Business Management',

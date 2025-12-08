@@ -34,6 +34,12 @@ class _DashboardPageState extends State<DashboardPage> {
       color: Colors.purple,
       count: 0,
     ),
+    _DashboardItem(
+      title: 'Staff',
+      icon: Icons.description,
+      color: Colors.tealAccent,
+      count: 0,
+    ),
   ];
 
   @override
@@ -175,6 +181,9 @@ class _DashboardPageState extends State<DashboardPage> {
         break;
       case 'Quotations':
         route = '/quotations';
+        break;
+      case 'staff':
+        route = '/staff';
         break;
     }
     if (route.isNotEmpty) {
