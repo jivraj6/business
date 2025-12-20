@@ -97,11 +97,9 @@ class _StaffAttendancePageState extends State<StaffAttendancePage> {
                 firstDate: DateTime(2020),
                 lastDate: DateTime.now(),
               );
-              if (picked != null) {
-                setState(() => selectedDate = picked);
-                loadAttendance();
-              }
-            },
+              setState(() => selectedDate = picked ?? selectedDate);
+              loadAttendance();
+                        },
             child: Container(
               padding: EdgeInsets.all(12),
               margin: EdgeInsets.all(12),

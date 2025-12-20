@@ -32,7 +32,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
     nameCtrl = TextEditingController(text: widget.product?.name ?? '');
     priceCtrl = TextEditingController(text: widget.product?.price ?? '');
     descCtrl = TextEditingController(text: widget.product?.description ?? '');
-    youtubeCtrl = TextEditingController(text: widget.product?.youtubeUrl ?? '');
+    youtubeCtrl = TextEditingController(
+      text: widget.product?.youtubeUrl.join(', ') ?? '',
+    );
+
     Future.microtask(() => context.read<CategoryProvider>().fetchCategories());
   }
 
@@ -114,7 +117,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
               TextField(
                 controller: youtubeCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'YouTube Video Link (optional)',
+                  labelText: 'YouTube Links (comma separated)',
+                  hintText: 'https://youtu.be/abc, https://youtu.be/xyz',
                 ),
               ),
               const SizedBox(height: 12),
@@ -180,6 +184,11 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 children: [
                   ElevatedButton(
                     onPressed: () async {
+                      final youtubeList = youtubeCtrl.text
+    .split(',')
+    .map((e) => e.trim())
+    .where((e) => e.isNotEmpty)
+    .toList();
                       final name = nameCtrl.text.trim();
                       final price = priceCtrl.text.trim();
                       if (name.isEmpty || price.isEmpty) {
@@ -197,7 +206,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         price: price,
                         description: descCtrl.text.trim(),
                         images: widget.product?.images ?? [],
-                        youtubeUrl: youtubeCtrl.text.trim(),
+                        youtubeUrl: youtubeList,
                       );
                       final ok = await prodProv.addProduct(prod, picked);
                       if (ok) Navigator.pop(context);

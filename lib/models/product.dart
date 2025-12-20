@@ -7,7 +7,7 @@ class Product {
   final String price;
   final String description;
   final List<String> images;
-  final String? youtubeUrl;
+  final List<String> youtubeUrl;
 
   Product({
     this.id,
@@ -16,7 +16,7 @@ class Product {
     required this.price,
     required this.description,
     required this.images,
-    this.youtubeUrl,
+    this.youtubeUrl = const [],
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -38,6 +38,17 @@ class Product {
       imgs = [];
     }
 
+    List<String> ytList = [];
+    final ytField = json['youtube_url'] ?? json['youtubeUrl'];
+
+    if (ytField is List) {
+      ytList = ytField.map((e) => e.toString()).toList();
+    } else if (ytField is String && ytField.isNotEmpty) {
+      ytList = ytField.startsWith('[')
+          ? List<String>.from(jsonDecode(ytField))
+          : [ytField];
+    }
+
     return Product(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()),
       name: json['name'] ?? '',
@@ -45,16 +56,16 @@ class Product {
       price: json['price']?.toString() ?? '',
       description: json['description'] ?? '',
       images: imgs,
-      youtubeUrl: json['youtube_url'] ?? json['youtubeUrl'],
+      youtubeUrl: ytList,
     );
   }
 
   Map<String, String> toFormFields() => {
-    'name': name,
-    'category': category,
-    'price': price,
-    'description': description,
-    if (youtubeUrl != null && youtubeUrl!.isNotEmpty)
-      'youtube_url': youtubeUrl!,
-  };
+        'name': name,
+        'category': category,
+        'price': price,
+        'description': description,
+        if (youtubeUrl != null && youtubeUrl!.isNotEmpty)
+          'youtube_url': youtubeUrl.join(','),
+      };
 }

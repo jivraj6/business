@@ -80,12 +80,14 @@ class ProductDetailsPage extends StatelessWidget {
             if (product.youtubeUrl != null &&
                 product.youtubeUrl!.isNotEmpty) ...[
               const SizedBox(height: 24),
+              
               Text(
                 'Product Videos:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              _buildYoutubePlayer(context, product.youtubeUrl!),
+              _buildVedioGallery(product.youtubeUrl),
+             // _buildYoutubePlayer(context, product.youtubeUrl!.first),
             ],
             const SizedBox(height: 24),
             Text(
@@ -153,6 +155,114 @@ class ProductDetailsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildAddMediaButton(BuildContext context, int index) {
+    return InkWell(
+      onTap: () {
+        if (index == 0) {
+          // openYoutubeDialog(context, 'dQw4w9WgXcQ');
+        } else {
+          //openYoutubeDialog(context, 'https://youtu.be/dQw4w9WgXcQ');
+        }
+        //_onAddMedia(context);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 220,
+        height: 220,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade400, width: 2),
+          color: Colors.grey.shade100,
+        ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add, size: 48, color: Colors.grey),
+            SizedBox(height: 8),
+            Text(
+              "Add Media",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVedioGallery(List<String> videoUrls) {
+    return SizedBox(
+      height: 220,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: videoUrls.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (context, idx) {
+          // ---------- ADD BUTTON ----------
+          if (idx == videoUrls.length) {
+            return _buildAddMediaButton(context, 0);
+          }
+
+          final rawUrl = videoUrls[idx];
+          final url = _absoluteUrl(rawUrl);
+
+          // ---------- YOUTUBE VIDEO ----------
+          final ytId = extractVideoId(rawUrl);
+          if (ytId != null) {
+            final thumb = "https://img.youtube.com/vi/$ytId/0.jpg";
+
+            return GestureDetector(
+              onTap: () => openYoutubeDialog(context, ytId),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      thumb,
+                      width: 220,
+                      height: 220,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.play_circle_fill,
+                    size: 64,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // ---------- VIDEO FILE ----------
+          if (_isVideo(url)) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 220,
+                color: Colors.black12,
+                child: const Center(
+                  child: Icon(Icons.videocam, size: 48),
+                ),
+              ),
+            );
+          }
+
+          // ---------- FALLBACK ----------
+          return Container(
+            width: 220,
+            alignment: Alignment.center,
+            child: const Icon(Icons.broken_image),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildMediaGallery(List<String> mediaUrls) {
     if (mediaUrls.isEmpty) {
       return Container(
@@ -165,10 +275,17 @@ class ProductDetailsPage extends StatelessWidget {
       height: 220,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: mediaUrls.length,
+        itemCount: mediaUrls.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, idx) {
+          // ---------- ADD BUTTON (LAST ITEM) ----------
+          if (idx == mediaUrls.length) {
+            return _buildAddMediaButton(context, 0);
+          }
+
+          // ---------- NORMAL MEDIA ----------
           final url = _absoluteUrl(mediaUrls[idx]);
+
           if (_isVideo(url)) {
             return AspectRatio(
               aspectRatio: 16 / 9,
@@ -189,9 +306,8 @@ class ProductDetailsPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               child: GestureDetector(
                 onTap: () {
-                  final fullImages = mediaUrls
-                      .map((e) => _absoluteUrl(e))
-                      .toList();
+                  final fullImages =
+                      mediaUrls.map((e) => _absoluteUrl(e)).toList();
                   _openImageViewer(context, fullImages, idx);
                 },
                 child: Image.network(
@@ -234,8 +350,7 @@ class ProductDetailsPage extends StatelessWidget {
   }
 
   void openYoutubeDialog(BuildContext context, String url) {
-    final videoId = url; //extractVideoId(url);
-    if (videoId == null) return;
+    final videoId = url;
 
     showDialog(
       context: context,
