@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/product.dart';
-import '../models/category.dart' as model;
+import '../../models/product.dart';
+import '../../models/category.dart' as model;
 import 'package:go_router/go_router.dart';
-import '../providers/product_provider.dart';
+import '../../providers/product_provider.dart';
 import 'product_form_page.dart';
 
 class ProductsPage extends StatefulWidget {
@@ -25,8 +25,13 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.category.name)),
-      floatingActionButton: _buildFloatingActionButton(context),
+      appBar: AppBar(
+          title: Consumer<ProductProvider>(builder: (context, provider, _) {
+        return Text(
+            "${widget.category.name}(${provider.products.where((p) => p.category.trim().toLowerCase() == widget.category.name.trim().toLowerCase()).length})");
+      })),
+      floatingActionButton:
+          _buildFloatingActionButton(context, widget.category.name),
       body: SafeArea(
         child: Consumer<ProductProvider>(
           builder: (context, provider, _) {
@@ -48,7 +53,8 @@ class _ProductsPageState extends State<ProductsPage> {
                 bool isDesktop = constraints.maxWidth > 800;
                 return Column(
                   children: [
-                    _buildHeader(context, provider, isDesktop),
+                    _buildHeader(
+                        context, provider, isDesktop, widget.category.name),
                     Expanded(
                       child: _buildGrid(
                         context,
@@ -68,20 +74,12 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   // ---------- HEADER ----------------
-  Widget _buildHeader(
-    BuildContext context,
-    ProductProvider provider,
-    bool isDesktop,
-  ) {
+  Widget _buildHeader(BuildContext context, ProductProvider provider,
+      bool isDesktop, String? id) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Text(
-            "${widget.category.name} Products (${provider.products.where((p) => p.category.trim().toLowerCase() == widget.category.name.trim().toLowerCase()).length})",
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-          ),
-          const Spacer(),
           if (isDesktop)
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
@@ -93,7 +91,7 @@ class _ProductsPageState extends State<ProductsPage> {
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ProductFormPage(),
+                  builder: (context) => ProductFormPage(catid: id),
                 ),
               ),
               icon: const Icon(Icons.add),
@@ -116,8 +114,7 @@ class _ProductsPageState extends State<ProductsPage> {
       crossAxisCount = 5;
     else if (c.maxWidth > 900)
       crossAxisCount = 4;
-    else if (c.maxWidth > 600)
-      crossAxisCount = 3;
+    else if (c.maxWidth > 600) crossAxisCount = 3;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -231,13 +228,13 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   // ---------- FLOATING BUTTON (mobile only) ------------
-  Widget? _buildFloatingActionButton(BuildContext context) {
+  Widget? _buildFloatingActionButton(BuildContext context, String? id) {
     if (MediaQuery.of(context).size.width > 800) return null;
     return FloatingActionButton(
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ProductFormPage()),
+          MaterialPageRoute(builder: (context) => ProductFormPage(catid: id)),
         );
       },
       child: const Icon(Icons.add),

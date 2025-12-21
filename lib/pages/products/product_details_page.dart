@@ -1,12 +1,22 @@
+import 'package:buisness/services/product_media_service.dart';
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import '../../models/product.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:html' as html;
 import 'dart:ui' as ui;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart' as flw;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
 
-class ProductDetailsPage extends StatelessWidget {
+class ProductDetailsPage extends StatefulWidget {
+  final Product product;
+  ProductDetailsPage({Key? key, required this.product}) : super(key: key);
+  @override
+  State<ProductDetailsPage> createState() => _ProductDetailsPageState();
+}
+
+class _ProductDetailsPageState extends State<ProductDetailsPage> {
   Widget _buildYoutubePlayer(BuildContext context, String url) {
     final uri = Uri.tryParse(url);
     String? videoId;
@@ -48,8 +58,7 @@ class ProductDetailsPage extends StatelessWidget {
     );
   }
 
-  final Product product;
-  const ProductDetailsPage({Key? key, required this.product}) : super(key: key);
+  List<Uint8List> pickedImages = [];
 
   String getthumb(String url) {
     final uri = Uri.tryParse(url);
@@ -69,6 +78,7 @@ class ProductDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var product = widget.product;
     return Scaffold(
       appBar: AppBar(title: Text(product.name)),
       body: SingleChildScrollView(
@@ -80,14 +90,14 @@ class ProductDetailsPage extends StatelessWidget {
             if (product.youtubeUrl != null &&
                 product.youtubeUrl!.isNotEmpty) ...[
               const SizedBox(height: 24),
-              
+
               Text(
                 'Product Videos:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               _buildVedioGallery(product.youtubeUrl),
-             // _buildYoutubePlayer(context, product.youtubeUrl!.first),
+              // _buildYoutubePlayer(context, product.youtubeUrl!.first),
             ],
             const SizedBox(height: 24),
             Text(
@@ -157,9 +167,67 @@ class ProductDetailsPage extends StatelessWidget {
 
   Widget _buildAddMediaButton(BuildContext context, int index) {
     return InkWell(
-      onTap: () {
+      onTap: () async {
         if (index == 0) {
-          // openYoutubeDialog(context, 'dQw4w9WgXcQ');
+          final res = await FilePicker.platform.pickFiles(
+            allowMultiple: true,
+            withData: true,
+            type: FileType.custom,
+            allowedExtensions: [
+              'jpg',
+              'jpeg',
+              'png',
+              'webp',
+            ],
+          );
+
+          if (res == null || !mounted) return;
+          setState(() {
+            for (final file in res.files) {
+              if (file.bytes == null) continue;
+
+              final name = file.name.toLowerCase();
+
+              if (name.endsWith('.jpg') ||
+                  name.endsWith('.jpeg') ||
+                  name.endsWith('.png') ||
+                  name.endsWith('.webp')) {
+                pickedImages.add(file.bytes!);
+              }
+            }
+          });
+
+          if (pickedImages.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("No media selected")),
+            );
+            return;
+          }
+
+          final ok = await ProductMediaService.updateProduct(
+            productId: widget.product.id!,
+            name: widget.product.name,
+            category: widget.product.category,
+            price: widget.product.price.toString(),
+            description: widget.product.description,
+            youtubeUrls: widget.product.youtubeUrl ?? [],
+            images: pickedImages,
+          );
+          if (!mounted) return;
+
+          if (ok) {
+            setState(() {
+              pickedImages.clear();
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Media uploaded successfully")),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Upload failed")),
+            );
+          }
         } else {
           //openYoutubeDialog(context, 'https://youtu.be/dQw4w9WgXcQ');
         }
@@ -263,6 +331,59 @@ class ProductDetailsPage extends StatelessWidget {
     );
   }
 
+  void _confirmDeleteImage(
+  BuildContext context,
+  String imagePath,
+  int index,
+) {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text("Delete Image"),
+      content: const Text(
+        "Are you sure you want to delete this image?",
+      ),
+      actions: [
+        TextButton(
+          child: const Text("Cancel"),
+          onPressed: () => Navigator.pop(context),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+          ),
+          child: const Text("Delete"),
+          onPressed: () async {
+            Navigator.pop(context);
+
+            final ok = await ProductMediaService.deleteImage(
+              productId: widget.product.id!,
+              imagePath: imagePath,
+            );
+
+            if (!mounted) return;
+
+            if (ok) {
+              setState(() {
+                widget.product.images.removeAt(index);
+              });
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Image deleted")),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Delete failed")),
+              );
+            }
+          },
+        ),
+      ],
+    ),
+  );
+}
+
+
   Widget _buildMediaGallery(List<String> mediaUrls) {
     if (mediaUrls.isEmpty) {
       return Container(
@@ -310,6 +431,8 @@ class ProductDetailsPage extends StatelessWidget {
                       mediaUrls.map((e) => _absoluteUrl(e)).toList();
                   _openImageViewer(context, fullImages, idx);
                 },
+
+                onLongPress: () =>  _confirmDeleteImage(context, mediaUrls[idx], idx),
                 child: Image.network(
                   url,
                   width: 220,

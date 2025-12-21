@@ -5,14 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/product.dart';
-import '../models/category.dart' as model;
-import '../providers/category_provider.dart';
-import '../providers/product_provider.dart';
+import '../../models/product.dart';
+import '../../models/category.dart' as model;
+import '../../providers/category_provider.dart';
+import '../../providers/product_provider.dart';
 
 class ProductFormPage extends StatefulWidget {
   final Product? product;
-  const ProductFormPage({Key? key, this.product}) : super(key: key);
+  final String? catid;
+  const ProductFormPage({Key? key, this.product,this.catid}) : super(key: key);
 
   @override
   State<ProductFormPage> createState() => _ProductFormPageState();
@@ -23,6 +24,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   late TextEditingController priceCtrl;
   late TextEditingController descCtrl;
   late TextEditingController youtubeCtrl;
+  late TextEditingController catCtrl;
   String? selectedCategoryId;
   List<PlatformFile> picked = [];
 
@@ -32,9 +34,11 @@ class _ProductFormPageState extends State<ProductFormPage> {
     nameCtrl = TextEditingController(text: widget.product?.name ?? '');
     priceCtrl = TextEditingController(text: widget.product?.price ?? '');
     descCtrl = TextEditingController(text: widget.product?.description ?? '');
+    catCtrl = TextEditingController(text: widget.catid ?? widget.product?.category);
     youtubeCtrl = TextEditingController(
       text: widget.product?.youtubeUrl.join(', ') ?? '',
     );
+    selectedCategoryId = widget.catid ?? widget.product?.category;
 
     Future.microtask(() => context.read<CategoryProvider>().fetchCategories());
   }
@@ -73,40 +77,45 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 decoration: const InputDecoration(labelText: 'Price'),
               ),
               const SizedBox(height: 12),
-              catProv.loading
-                  ? const CircularProgressIndicator()
-                  : Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedCategoryId,
-                            items: [
-                              ...catProv.categories.map(
-                                (c) => DropdownMenuItem(
-                                  value: c.name?.toString(),
-                                  child: Text(c.name),
-                                ),
-                              ),
-                              const DropdownMenuItem(
-                                value: '__add_new__',
-                                child: Text('➕ Add new category'),
-                              ),
-                            ],
-                            onChanged: (v) async {
-                              if (v == '__add_new__') {
-                                await _showAddCategoryDialog();
-                                return;
-                              }
-                              setState(() => selectedCategoryId = v);
-                            },
-                            decoration: const InputDecoration(
-                              labelText: 'Category',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+              TextField(
+                controller: catCtrl,
+                enabled: false,
+                decoration: const InputDecoration(labelText: 'Category'),
+              ),
+              // catProv.loading
+              //     ? const CircularProgressIndicator()
+              //     : Row(
+              //         children: [
+              //           Expanded(
+              //             child: DropdownButtonFormField<String>(
+              //               isExpanded: true,
+              //               value: selectedCategoryId,
+              //               items: [
+              //                 ...catProv.categories.map(
+              //                   (c) => DropdownMenuItem(
+              //                     value: c.name?.toString(),
+              //                     child: Text(c.name),
+              //                   ),
+              //                 ),
+              //                 const DropdownMenuItem(
+              //                   value: '__add_new__',
+              //                   child: Text('➕ Add new category'),
+              //                 ),
+              //               ],
+              //               onChanged: (v) async {
+              //                 if (v == '__add_new__') {
+              //                   await _showAddCategoryDialog();
+              //                   return;
+              //                 }
+              //                 setState(() => selectedCategoryId = v);
+              //               },
+              //               decoration: const InputDecoration(
+              //                 labelText: 'Category',
+              //               ),
+              //             ),
+              //           ),
+              //         ],
+              //       ),
               const SizedBox(height: 12),
               TextField(
                 controller: descCtrl,
@@ -185,10 +194,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   ElevatedButton(
                     onPressed: () async {
                       final youtubeList = youtubeCtrl.text
-    .split(',')
-    .map((e) => e.trim())
-    .where((e) => e.isNotEmpty)
-    .toList();
+                          .split(',')
+                          .map((e) => e.trim())
+                          .where((e) => e.isNotEmpty)
+                          .toList();
                       final name = nameCtrl.text.trim();
                       final price = priceCtrl.text.trim();
                       if (name.isEmpty || price.isEmpty) {
@@ -255,22 +264,22 @@ class _ProductFormPageState extends State<ProductFormPage> {
         ],
       ),
     );
-    if (res == true) {
-      final name = ctrl.text.trim();
-      if (name.isEmpty) return;
-      final ok = await prov.addCategory(name);
-      if (ok) {
-        // select the newly added category if present
-        final added = prov.categories.firstWhere(
-          (e) => e.name == name,
-          orElse: () => model.Category(id: null, name: name),
-        );
-        setState(() => selectedCategoryId = added.id?.toString());
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to add category')));
-      }
-    }
+    // if (res == true) {
+    //   final name = ctrl.text.trim();
+    //   if (name.isEmpty) return;
+    //   final ok = await prov.addCategory(name);
+    //   if (ok) {
+    //     // select the newly added category if present
+    //     final added = prov.categories.firstWhere(
+    //       (e) => e.name == name,
+    //       orElse: () => model.Category(id: null, name: name),
+    //     );
+    //     setState(() => selectedCategoryId = added.id?.toString());
+    //   } else {
+    //     ScaffoldMessenger.of(
+    //       context,
+    //     ).showSnackBar(const SnackBar(content: Text('Failed to add category')));
+    //   }
+    // }
   }
 }

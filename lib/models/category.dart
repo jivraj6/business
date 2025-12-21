@@ -1,8 +1,13 @@
 class Category {
   final int? id;
   final String name;
+  final String? img; // 👈 image url
 
-  Category({this.id, required this.name});
+  Category({
+    this.id,
+    required this.name,
+    this.img,
+  });
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
@@ -10,8 +15,12 @@ class Category {
           ? json['id']
           : int.tryParse(json['id']?.toString() ?? ''),
       name: json['name'] ?? '',
+      img: json['img'], // 👈 API se aayega
     );
   }
 
-  Map<String, String> toFormFields() => {'name': name};
+  // For old form-urlencoded use (optional)
+  Map<String, String> toFormFields() => {
+        'name': name,
+      };
 }

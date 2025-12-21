@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/category.dart';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 
 class CategoryService {
   static const String _base = 'https://palbalaji.tempudo.com/business/api/';
@@ -17,16 +19,27 @@ class CategoryService {
     return items.map((e) => Category.fromJson(e)).toList();
   }
 
-  Future<bool> addCategory(String name) async {
+  Future<bool> addCategory({
+    required String name,
+    required Uint8List imageBytes,
+  }) async {
     final uri = Uri.parse('${_base}categories.php?action=add');
+
     final resp = await http
         .post(
           uri,
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: {'name': name},
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'name': name,
+            'image': base64Encode(imageBytes),
+          }),
         )
         .timeout(const Duration(seconds: 20));
+
     if (resp.statusCode != 200) return false;
+
     final data = json.decode(resp.body);
     return data != null && data['status'] == 'success';
   }
